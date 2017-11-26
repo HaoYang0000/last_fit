@@ -10,15 +10,25 @@ var parseDate = d3.time.format("%Y-%m-%d").parse;
 var parseTime = d3.time.format("%H:%M:%S").parse;
 var parseWhole = d3.time.format("%Y-%m-%dT%H:%M:%S").parse;
 var activityLabels = ['Study', 'Walking', 'Lecture Time', 'Meeting', 'Running', 'Swimming', 'Walking the dog', 'Playing with children at the backyard'];
-var baseUrl = "http://localhost:8080/api";
+//var baseUrl = "http://localhost:8080/api";
 var id = $("#identity").text();
 var port = $("#portNo").text();
+var env = $("#environment").text();
 
 // var data_summary = $("#data_summary").text();
 // console.log(data_summary[0,10]);
 // console.log(typeof(JSON.parse(data_summary)));
 
-var getStatUrl = `http://localhost:${port}/getactivity?userid=52KG66&daysBefore=4&today=2017-10-03`;
+var host;
+if (env == 'development') {
+    host = `localhost` + `:${port}`;
+}
+if (env === 'production') {
+    host = 'health-companion-uiuc.azurewebsites.net';
+}
+console.log(host);
+
+var getStatUrl = `http://` + host + `/getactivity?userid=52KG66&daysBefore=4&today=2017-10-03`;
 console.log(getStatUrl);
 var data = d3.json(getStatUrl,
 	function (error, dataArr) {
@@ -168,7 +178,7 @@ var data = d3.json(getStatUrl,
 			console.log(user_id);
 			$('#labels').empty();
 			$('#addLabel').empty();
-			$.get('http://localhost:5000/getLabel', {'user_id': user_id}, function (data) {
+            $.get(`http://` + host + `/getLabel`, {'user_id': user_id}, function (data) {
 				//console.log(data[0]);
 				//console.log(data.length);
 				for (item in data) {
@@ -203,7 +213,7 @@ var data = d3.json(getStatUrl,
 				'subjTag':subjTag
 			}
 
-			$.post('http://localhost:5000/insertLabel', label, function (data) {
+            $.post(`http://` + host + `/insertLabel`, label, function (data) {
 				console.log(data);
 				generateLabels(user_id);
 				//console.log(data.duration);
