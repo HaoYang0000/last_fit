@@ -28,7 +28,7 @@ var getStatUrl = `http://` + host + `/getactivity?userid=52KG66&daysBefore=4&tod
 console.log(getStatUrl);
 var data = d3.json(getStatUrl,
 	function (error, dataArr) {
-		var sumTmp = 0;
+		//var sumTmp = 0;
 		console.log(dataArr[0])
 
 		var data = [];
@@ -36,9 +36,9 @@ var data = d3.json(getStatUrl,
 			// data
 			.forEach(function (x) {
 				var tmpX = {};
-				tmpX.steps_value = +x[2];//				x.steps_value = +x.steps_value;
-				sumTmp += tmpX.steps_value;
-				tmpX.steps_all = sumTmp;
+				//tmpX.steps_value = +x[2];//				x.steps_value = +x.steps_value;
+				//sumTmp += tmpX.steps_value;
+				//tmpX.steps_all = sumTmp;
 				tmpX.cals = +x[1];
 				tmpX.wholeTime = parseWhole(x[0]);
 				tmpX.date = (x[0].split('T')[0]);//ok without parseDate, if take intra-day view out
@@ -57,7 +57,7 @@ var data = d3.json(getStatUrl,
 			return d.date;
 		});
 		var exercise_all = dateDim.group().reduceSum(function (d) {
-			return d.steps_value;
+			return d.cals;//d.steps_value;
 		});
 		var minDate = dateDim.bottom(1)[0].date;
 		var maxDate = dateDim.top(1)[0].date;
@@ -87,17 +87,17 @@ var data = d3.json(getStatUrl,
 
 		var calendarGroup = calendarDimension.group().reduce(
 			(p,v)=>{
-				p.stepAll += v.steps_value;
+				//p.stepAll += v.steps_value;
 				p.calAll += v.cals;
 				return p;
 			},
 			(p,v)=>{
-				p.stepAll -= v.steps_value;
+				//p.stepAll -= v.steps_value;
 				p.calAll -= v.cals;
 				return p;
 			},
 			()=>{
-				return {stepAll:0, calAll:0};
+				return {calAll:0};
 			}
 		);
 		/*Sum((d)=>{
@@ -113,16 +113,17 @@ var data = d3.json(getStatUrl,
         .dimension(calendarDimension)
         .group(calendarGroup)
         .valueAccessor(function (p) {
-            return p[0].value.stepAll;
+            return p[0].value.calAll.toFixed(3);
         })
-        //.rangeMonth([9,10])
+        .viewMode('week')
+        .currSelectedDate('2017-10-02')
         .renderTitle(true).filter(maxDate);
 
 		//mothChart,week,
 		//$(#)/.empty
 
 		var generateLabels = function (user_id) {
-			console.log(user_id);
+			console.log(user_id,'label generating');
 			$('#labels').empty();//
 			$('#addLabel').empty();
         $.get(`http://` + host + `/getLabel`, {'user_id': user_id}, function (data) {
@@ -133,9 +134,9 @@ var data = d3.json(getStatUrl,
 					//TODO a brief version, only show labelInfo[2][0], not concatened labelInfo[2] items
 					labelName = JSON.parse(labelInfo[2])[0];
 					subjFeel = JSON.parse(labelInfo[5])[0];
+          shortenedCal = (+labelInfo[4]).toFixed(3);
 					$('#labels').append("<button class='btn btn-primary life-label' style='margin:5px;'>"
-					 + `${labelName},\nin total ${labelInfo[3]} steps,\n
-					 consuming around ${labelInfo[4]} calorie,\n feeling ${subjFeel}` + "</button>");
+					 + `${labelName},\nconsuming around ${shortenedCal} calorie,\n feeling ${subjFeel}` + "</button>");
 				}
 			});
 
@@ -172,7 +173,7 @@ var data = d3.json(getStatUrl,
 			return 'day' + '.' + week[d.weekDay];
 		});
 		var weekDayGroup = weekDayDim.group().reduceSum(function (d) {
-			return d.steps_value;
+			return d.cals;
 		});
 
 		weekdayView
@@ -188,7 +189,7 @@ var data = d3.json(getStatUrl,
 			.ticks(4);
 
 		var exerciseDim = exs.dimension(function (d) {
-			return d.steps_all;
+			return d.cals;
 		});
 		var exerciseGroup = exerciseDim.group(function (d) {
 			return Math.floor(d / 3000) * 3000;
@@ -213,7 +214,7 @@ var data = d3.json(getStatUrl,
 
 		var intradayGroup = intradayDim.group().reduceSum(function (d) {
 			// aggre_value = aggre_value + d.steps_value;
-			return d.steps_value;
+			return d.cals;
 		});
 		var start_time = intradayDim.bottom(1)[0].time;
 
@@ -244,7 +245,7 @@ var data = d3.json(getStatUrl,
 			//add this line would eat some data
 				var accumSteps = intradayDim.filter([p_start_time, p_end_time]).top(Infinity)//.groupAll()
 				.reduce(function(prev, curr) {
-					return prev+parseInt(curr.steps_value);
+					return prev+(curr.cals);
 				}, 0);//Sum((d)=>{return d.steps_value;});
 				console.log(accumSteps);
 
@@ -275,7 +276,7 @@ var data = d3.json(getStatUrl,
 					if ($('#newLabel').val().match(/\S/) && periodStart !== "06:00:00 AM" && periodEnd !== "10:00:00 PM") {
 						activityLabels.push($('#newLabel').val());
 						//TODO don't display at once. how to use promise with ajax post?
-						//$('#labels').append("<button class='btn btn-primary life-label' style='margin:5px;'>" + $('#newLabel').val() + "</button>");
+
 						uploadLabel(id, periodStart, periodEnd, $('#newLabel').val(), duration, accumSteps, accumCals, $('#subjTag').val());
 					} else {
 						alert("Please type in the activity before hit the submit button!");

@@ -1,26 +1,30 @@
 dc.calendarChart = function (parent, chartGroup) {
 
-var thisYear = new Date().getFullYear();
-var _chart = dc.marginMixin(dc.baseMixin({}));
-var color;
-var width = 900,
-	height = 120,
-	cellSize = 16; // cell size
-	_chart.AVAILABLE_CLASS = "day-available";
-	_chart.UNAVAILABLE_CLASS = "day-unavailable"
-	_chart.SELECTED_CLASS = "day-selected";
-	_chart.DESELECTED_CLASS = "day-deselected";
-	_chart.OFFSET = 20;
-	_chart.range = d3.range(thisYear, thisYear + 1);
-	_chart.currDate = new Date();
-	_chart.maxHeat = 10000;
-	_chart.CLICKOnNoData = false;
-
 var day = d3.time.format("%w"),
 	week = d3.time.format("%U"),
 	percent = d3.format(".1%"),
 	format = d3.time.format("%Y-%m-%d"),
 	fullMonth = d3.time.format("%b");
+
+var _chart = dc.marginMixin(dc.baseMixin({}));
+var color;
+var width = 900,
+	height = 120,
+	yearCellSize = 16; // cell size
+	weekCellSize = 50;
+
+	_chart.AVAILABLE_CLASS = "day-available";
+	_chart.UNAVAILABLE_CLASS = "day-unavailable"
+	_chart.SELECTED_CLASS = "day-selected";
+	_chart.DESELECTED_CLASS = "day-deselected";
+	_chart.OFFSET = 20;
+
+	_chart.view_mode = 'year';
+	_chart.weekWindow = 3;
+	_chart.currDate = simpleDate(new Date());
+	_chart.range = d3.range(parseInt(_chart.currDate.split('-')[0]),parseInt(_chart.currDate.split('-')[0]) + 1);
+	_chart.maxHeat = 1500;
+	_chart.CLICKOnNoData = false;
 
 var dowMap = {
 	"Sun" : 1,//"M","T","W","R","F","S"
@@ -43,59 +47,135 @@ _chart._doRender = function () {
 		.selectAll("svg")
 		.remove();
 
-	var svg = d3.select("#"+ _chart.anchorName())
-		.selectAll("svg")
-		.data(_chart.range)
-		.enter().append("svg")
-		.style("padding",'3px')
-		.attr("width", width + _chart.margins().left + (cellSize * 3))
-		.attr("height", height + _chart.margins().top + cellSize)
-		.attr("class", "RdYlGn")
-		.append("g")
-		.attr("transform", "translate(" + _chart.margins().left + "," + _chart.margins().top + ")");
+		var svg, rect;
+		//console.log(_chart.view_mode);
+	if(_chart.view_mode == 'year'){
+		  svg = d3.select("#"+ _chart.anchorName())
+			.selectAll("svg")
+			.data(_chart.range)
+			.enter().append("svg")
+			.style("padding",'3px')
+			.attr("width", width + _chart.margins().left + (yearCellSize * 3) + _chart.margins().right)
+			.attr("height", height + _chart.margins().top + yearCellSize)
+			.attr("class", "RdYlGn")
+			.append("g")
+			.attr("transform", "translate(" + _chart.margins().left + "," + _chart.margins().top + ")");
 
-	svg.append("text")
-		.attr("transform", "translate(-16," + cellSize * 3.5 + ")rotate(-90)")
-		.style("text-anchor", "middle")
-		.text(function(d) { return d; });//y axis year
+		svg.append("text")
+			.attr("transform", "translate(-16," + yearCellSize * 3.5 + ")rotate(-90)")
+			.style("text-anchor", "middle")
+			.text(function(d) { return d; });//y axis year
 
-	if(_chart.renderTitle()){
-		var dowLabel = svg.selectAll('.dowLabel')
-			.data(function(d){return ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];})
+		if(_chart.renderTitle()){
+			var dowLabel = svg.selectAll('.dowLabel')
+				.data(function(d){return ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];})
+				.enter().append("text")
+				.attr('transform', function(d){
+
+				return "translate(-15," + parseInt((yearCellSize * dowMap[d]) - 3) + ")";})
+				.text(function(d) { return d; })
+				.attr("style","font-weight : bold");
+		}
+
+		rect = svg.selectAll(".day")
+			.data(function(d) {return d3.time.days(new Date(d, 0, 1), new Date(d + 1, 0, 1)); })
+			.enter()
+			.append("rect")
+			.attr("class", "day")
+			.attr("width", yearCellSize)
+			.attr("height", yearCellSize)
+			.attr("x", function(d) { return week(d) * yearCellSize + _chart.OFFSET; })
+			.attr("y", function(d) { return day(d) * yearCellSize; });
+			//.datum(format);
+			// .attr("data-ot",function(d){
+			//   return d;
+			// });
+
+		if(_chart.renderTitle()){
+			rect.append("title")
+				.text(function(d) { return d; });
+		}
+
+		var monthLabel = svg.selectAll(".monthLabel")
+			.data(function(d) { return d3.time.months(new Date(d, 0, 1), new Date(d + 1, 0, 1)); })
 			.enter().append("text")
-			.attr('transform', function(d){
+			.text(function(d){ return fullMonth(d);})
+			.attr("x", function(d){return week(d) * yearCellSize + _chart.OFFSET/*+ yearCellSize*/;})
+			.attr("y", -3)
+			.attr("class","monthLabel");
+	} else if(_chart.view_mode == 'week'){
+		console.log('week mode triggered');
+		console.log(_chart.currDate);
+		  svg = d3.select("#"+ _chart.anchorName())
+			.selectAll("svg")
+			.data([_chart.currDate])
+			.enter().append("svg")
+			.style("padding",'3px')
+			.attr("width", width + _chart.margins().left + (yearCellSize * 3) + _chart.margins().right)
+			.attr("height", height + _chart.margins().top + yearCellSize)
+			.attr("class", "RdYlGn")
+			.append("g")
+			.attr("transform", "translate(" + _chart.margins().left + "," + _chart.margins().top + ")");
 
-			return "translate(-15," + parseInt((cellSize * dowMap[d]) - 3) + ")";})
-			.text(function(d) { return d; })
-			.attr("style","font-weight : bold");
+		//	console.log(svg.data(), _chart.range, _chart.currDate);
+		rect = svg.selectAll(".day")
+			.data(function(d) {
+				let yearVal,monthVal,dateVal;
+				[yearVal,monthVal,dateVal] = _chart.currDate.split('-');
+				//console.log(yearVal,monthVal,dateVal);
+				yearVal = parseInt(yearVal);monthVal = parseInt(monthVal)-1;dateVal = parseInt(dateVal);
+				console.log(yearVal,monthVal,dateVal);
+				var weekStart = new Date(yearVal,monthVal,dateVal);
+				var weekEnd = new Date(yearVal,monthVal,dateVal);
+				console.log(weekStart);
+				weekStart.setDate(weekStart.getDate() - _chart.weekWindow);
+				console.log(weekStart);
+				weekEnd.setDate(weekEnd.getDate() + _chart.weekWindow + 1);
+				console.log(d3.time.days(weekStart, weekEnd));
+				return d3.time.days(weekStart, weekEnd); })
+			.enter()
+			.append("rect")
+			.attr("class", "day")
+			.attr("width", weekCellSize)
+			.attr("height", weekCellSize)
+			.attr("x", function(d) { return (_chart.weekWindow + Math.floor((d - jsDateYMD(_chart.currDate))/(24*60*60*1000)))* weekCellSize + _chart.OFFSET+200; })
+			.attr("y", function(d) { return weekCellSize;; });
+			//.datum(format);
+			// .attr("data-ot",function(d){
+			//   return d;
+			// });
+		if(_chart.renderTitle()){
+			rect.append("title")
+				.text(function(d) { return d; });
+		}
 	}
+	//console.log(_chart.margins().left,_chart.margins().right);
+	var viewSwitches = svg.selectAll(".switches")
+		.data(["week", "year"])
+		.enter().append('g');
 
-	var rect = svg.selectAll(".day")
-		.data(function(d) { return d3.time.days(new Date(d, 0, 1), new Date(d + 1, 0, 1)); })
-		.enter()
-		.append("rect")
-		.attr("class", "day")
-		.attr("width", cellSize)
-		.attr("height", cellSize)
-		.attr("x", function(d) { return week(d) * cellSize + _chart.OFFSET; })
-		.attr("y", function(d) { return day(d) * cellSize; });
-		//.datum(format);
-		// .attr("data-ot",function(d){
-		//   return d;
-		// });
+		viewSwitches.append("rect")
+		.attr("class", "switches")
+		.attr("x", width)
+		.attr("y", function(d,i){
+			console.log(i,d);
+			return height + _chart.margins().top - 35*(i+1);})
+		.attr("width", 70)
+		.attr("height", 30)
+		.attr("fill", "rgb(251,180,174)")
+		.on('click',function(d,i){
+			console.log("switch to " + d + ' mode');
+			_chart.viewMode(d);
+			console.log(_chart.view_mode);
+			_chart.redrawGroup();
+		});
 
-	if(_chart.renderTitle()){
-		rect.append("title")
-			.text(function(d) { return d; });
-	}
-
-	var monthLabel = svg.selectAll(".monthLabel")
-		.data(function(d) { return d3.time.months(new Date(d, 0, 1), new Date(d + 1, 0, 1)); })
-		.enter().append("text")
-		.text(function(d){ return fullMonth(d);})
-		.attr("x", function(d){return week(d) * cellSize + _chart.OFFSET/*+ cellSize*/;})
-		.attr("y", -3)
-		.attr("class","monthLabel");
+		viewSwitches.append("text")
+		.attr("x", width + 18)
+		.attr("y", function(d,i){
+			console.log(i,d);
+			return height + _chart.margins().top - 35*(i+1) + 20;})
+		.text((d)=>{return d})
 
 	var data = d3.nest()
 		.key(function(d) { return d.key; })
@@ -135,11 +215,6 @@ _chart._doRender = function () {
 					.on('click', onClickNoData);
 	}
 
-		// .attr("data-ot",function(d){
-		// 	var date = simpleDate(d);
-		// 	return d + ": " + data[date].toFixed(2) + " Daily Average";
-		// });
-
 	if(_chart.renderTitle()){
 		rect.filter(function(d) {
 			var date = simpleDate(d);
@@ -157,6 +232,7 @@ _chart._doRender = function () {
 function onClick(d, i) {
 	var dateClicked = simpleDate(d);
 	_chart.currDate = dateClicked;
+	console.log(_chart.currDate);
 	_chart.group().all().forEach(function(datum){
 		if(datum.key === dateClicked){
 			//_chart.onClick(datum, i);//check source code here: //https://github.com/dc-js/dc.js/blob/develop/src/base-mixin.js
@@ -196,6 +272,13 @@ function prefixZero(value) {
 
 function simpleDate(date){
 	return date.getFullYear() + "-" + prefixZero(date.getMonth() + 1) + "-" + prefixZero(date.getDate());
+}
+
+function jsDateYMD(date){
+	let yearVal,monthVal,dateVal;
+	[yearVal,monthVal,dateVal] = date.split('-');
+	yearVal = parseInt(yearVal);monthVal = parseInt(monthVal)-1;dateVal = parseInt(dateVal);
+	return new Date(yearVal,monthVal,dateVal);
 }
 
 _chart.legendables = function () {
@@ -248,6 +331,11 @@ _chart.resetAvailable = function (e) {
 	d3.select(e).classed(_chart.UNAVAILABLE_CLASS, false);
 };
 
+_chart.viewMode = function(mode){
+	_chart.view_mode = mode;
+	return _chart;
+}
+
 _chart.rangeYears = function(range){
 	_chart.range = d3.range(range[0], range[1]);
 	return _chart;
@@ -271,17 +359,18 @@ function _highlightFilters() {
 		var chartData = _chart.group().all();
 		_chart.root().selectAll('.day').each(function (d) {
 			var simpD = simpleDate(d), loc = binSrcr(_chart.data(), simpD), available = false;
+			//console.log(simpD);
 			//console.log(loc);
 			if(loc >= 0 && loc < _chart.data().length){
 				if(_chart.data()[loc].key == simpD){
-//					console.log(simpD);
+				//	console.log(simpD);
 					available = true;
 				}
 			}
 			if (_chart.hasFilter(simpD)) {//add selected here
 				_chart.darkSelected(this);
 			} else if(available){
-				console.log('true');
+				//console.log('true');
 				_chart.highlightAvailable(this);
 			}
 			else {

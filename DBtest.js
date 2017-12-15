@@ -97,9 +97,9 @@ function tryDeletePlan(dbName, date){
 //tryDeletePlan('52KG66', '2017-10-14')
 //getTableInfo('52KG66')
 //dropTable('52KG66','labels')
-//checkDB('52KG66','labels')
+checkDB('52KG66','labels')
 //checkDB('TOKEN2ID','names')
 //checkDB('52KG66','profile');
 //checkDB('52KG66','activity');
-checkDB('52KG66','plan');
+//checkDB('52KG66','plan');
 //getDataFromLocDB();

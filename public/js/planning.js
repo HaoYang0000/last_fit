@@ -267,14 +267,14 @@ function getPlanFromDBAndRender(){
             etimeStr = getSimpHHMM(d.etime);
             svg.append("text").attr({
                id: "tshow" + i,  // Create an id for text so we can select it later for removing on mouseout
-                x: function() { return xScale(d.stime)},
+                x: function() { return Math.max(0,Math.min(intraDChartWidth - 150,xScale(d.stime) - 150))},
                 y: function() { return yScale(d.intensity)}
             })
             .text(function() {
               let dur = Math.round((d.etime - d.stime)/(1000*60)),
               calConsump = dur*d.intensity;
               console.log(dur,d.intensity);
-              return `from ${stimeStr} to ${etimeStr}, consuming ${calConsump} calories.`;  // Value of the text
+              return `from ${stimeStr} to ${etimeStr},\n consuming ${calConsump.toFixed(3)} calories.`;  // Value of the text
             });
         })
         .on("mouseout", function(d, i){
@@ -457,8 +457,7 @@ function getPlanFromDBAndRender(){
         subjFeel = JSON.parse(labelInfo[5])[0];
         $('#labels').append(`<button class='btn btn-primary life-label' style='margin:5px;' value = ${item} >`
         //+`startTime = ${labelInfo[0]}, endTime = ${labelInfo[1]}, labelName = ${labelName}, cals = ${labelInfo[4]}, >`
-         + `${labelName},\nin total ${labelInfo[3]} steps,
-         consuming around ${labelInfo[4]} calorie,\n feeling ${subjFeel}` + "</button>");
+         + `${labelName},\nconsuming around ${labelInfo[4]} calorie,\n feeling ${subjFeel}` + "</button>");
       }
     });
     $('#labels').on("click", "button", function(){
@@ -616,7 +615,6 @@ function getPlanFromDBAndRender(){
           .valueAccessor(function (p) {
               return p[0].value.calAll;
           })
-          //.rangeMonth([9,10])
           .currSelectedDate(maxDate)
           .clickOnNoData(true)
           .renderTitle(true)
