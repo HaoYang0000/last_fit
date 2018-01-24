@@ -224,6 +224,7 @@ exports.updateLabels = function(userID, toUpdate){//TODO how to deal with multip
     })
 }
 
+//the access token, check fitbit developer page for details
 exports.getToken = function(userID){
     return new Promise((resolve, reject)=>{
         var sql = `SELECT accTok tok FROM names WHERE userID = ?`
@@ -276,6 +277,7 @@ exports.getLastLogin = function(userID){
     })
 }
 
+//update last login time
 exports.updateLastLogin = function(userID, newLastLogin){
     console.log('updating last login')
     var updSql = `UPDATE profile SET val = ?
@@ -297,6 +299,7 @@ exports.updateLastLogin = function(userID, newLastLogin){
     });
 }
 
+//to parse the profile of user, based on user ID
 exports.getProfile = function(userID){
     return new Promise((resolve, reject)=>{
         var existOrNot = `SELECT * FROM names WHERE userID = ?`
@@ -364,6 +367,7 @@ exports.queryActivity = function(userID, tableName, timeStart, timeEnd){
     })
 }
 
+//get activity data from local database
 exports.getActDataFromLocalDB = function(userID, resourceType, startDay, endDay, dayFilter = [], hourFilter = []){
     console.log(`get data of ${userID} about ${resourceType} from ${startDay}
       to ${endDay}, with hourFilter ${hourFilter} and dayFilter ${dayFilter}`)

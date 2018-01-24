@@ -202,7 +202,7 @@ app.get('/getLabel',function(req,res){
 	}).catch(reason=>{ console.log('fail to get labels: ', reason); });
 });
 
-	//http://localhost:5000/getPlan?userID=52KG66&sdate=2017-10-08&edate=2017-10-15&planset=A
+//http://localhost:5000/getPlan?userID=52KG66&sdate=2017-10-08&edate=2017-10-15&planset=A
 //startTime, endTime, planLblName(cal/minute), aveIntensity, planSet
 app.get('/getPlan',function(req,res){
 	let PARSEDQRY = querystring.parse(req.url.split('?')[1])
@@ -252,8 +252,7 @@ app.post('/setPlan',function(req,res){
 	}).catch(reason=>{console.log('failed to record new label: ',reason)});
 });
 
-//get data from Fitbit API
-//test what if startDate > endDate
+//not in use, just for previous debugging
 //http://localhost:5000/getactFitbitAPI?userid=52KG66&resourceType=calories
 app.get('/getactFitbitAPIusing1dayfunc', function(req,res){
     let PARSEDQRY = querystring.parse(req.url.split('?')[1])
@@ -277,6 +276,7 @@ app.get('/getactFitbitAPIusing1dayfunc', function(req,res){
 
 //get data from Fitbit API
 //test what if startDate > endDate
+//not in use, just for previous debugging
 //http://localhost:5000/getactFitbitAPI?userid=52KG66&resourceType=calories
 app.get('/getactFitbitAPIcontinuous', function(req,res){
     let PARSEDQRY = querystring.parse(req.url.split('?')[1])
@@ -297,11 +297,13 @@ app.get('/getactFitbitAPIcontinuous', function(req,res){
     })
 });
 
+//statistics about previous activity history
 app.get('/stats', function (req, res) {
   console.log("this is the /index directory");
   res.render('pages/stats', {user: USER_ID, port:app.get('port'), env:app.get('env')});
 });
 
+//planning page for future activity
 app.get('/planning_page', function (req, res) {
   console.log("planning ... this is the dirname" + __dirname);
 	res.render('pages/planning', {user: USER_ID, port:app.get('port'), env:app.get('env')});
